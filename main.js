@@ -12,7 +12,7 @@ const results = []
 
 async function main() {
   const rs = await new Promise((resolve) => {
-    createReadStream('in.csv')
+    createReadStream(path.join('in.csv'))
       .pipe(csv({ separator: ',' }))
       .on('data', (data) => results.push(data))
       .on('end', () => {
@@ -24,12 +24,21 @@ async function main() {
   rmSync('medias', { recursive: true })
   mkdirSync('medias', { recursive: true })
 
+  console.log('Processing:', rs)
   const newResults = []
   for (const result of rs) {
     const newResult = { ...result }
 
-    const tts = new gTTS(result.kr.replace(/[~,.;\\\/]/g, '_'), lang)
-    const cleanName = result.kr.replace(/[~!@#$%^&*()_=\/\\\+\\"?<>.,;]/g, '_')
+    // Nettoyage des ponctuations et suppression des points de fin de phrase
+    const sanitizedText = result.kr
+      .replace(/[!@#$%^&*()_=\/\\\+\\"<>;]/g, '_')
+      .replace(/\.$/, '')
+
+    const tts = new gTTS(sanitizedText, lang)
+    const cleanName = sanitizedText.replace(
+      /[~!@#$%^&*()_=\/\\\+\\"?<>.,;]/g,
+      '_'
+    )
 
     tts.save(
       path.join('medias', `${cleanName}.mp3`),
@@ -39,6 +48,7 @@ async function main() {
     newResult[
       langDestCode
     ] = `"${newResult[langDestCode]}\n[sound:${cleanName}.mp3]"`
+
     newResults.push(newResult)
   }
 
