@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "generate": "node main.js"
+    "generate": "node main.js",
+    "generate:cloze": "node main.js --cloze"
   },
   "keywords": [],
   "author": "",
