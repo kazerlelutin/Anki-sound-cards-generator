@@ -11,7 +11,6 @@ const langDestCode = 'kr'
 const results = []
 
 async function main() {
-
   const args = process.argv.slice(2)
   const isCloze = args.includes('--cloze')
   const clozeReg = /{{c\d+::.*?}}/g
@@ -32,15 +31,12 @@ async function main() {
   console.log('Processing:', rs)
   const newResults = []
   for (const result of rs) {
-
     // Nettoyage des ponctuations et suppression des points de fin de phrase
     const sanitizedText = result[langDestCode]
       .replace(/[!@#$%^&*()_=\/\\\+\\"<>;]/g, ' ')
       .replace(/\.$/, '')
       .replace(/{{c\d+::/g, '')
       .replace(/}}/g, '')
-
-
 
     const tts = new gTTS(sanitizedText.replace(/~/g, ' '), lang)
 
@@ -50,24 +46,23 @@ async function main() {
 
     tts.save(path.join('medias', mediaName), (err) => err && console.error(err))
 
-
-
     const cleanText = result[langDestCode].replace(/"/g, '').trim()
 
-    const tags = result.tags.replace(" ", ",")
+    const tags = result.tags.replace(' ', ', ').replace(/,/g, ' ').trim()
     if (isCloze) {
       const words = cleanText.split(' ')
 
-      newResults.push(...words.map((word) => {
-        const clozeText = cleanText.replace(word, `{{c1::${word}}}`)
-        return {
-          recto: `${clozeText} <br><hr />${result[langSrcCode]}`,
-          verso: `[sound:${mediaName}]`,
-          tags,
-        }
-      }))
+      newResults.push(
+        ...words.map((word) => {
+          const clozeText = cleanText.replace(word, `{{c1::${word}}}`)
+          return {
+            recto: `${clozeText} <br><hr />${result[langSrcCode]}`,
+            verso: `[sound:${mediaName}]`,
+            tags,
+          }
+        })
+      )
     } else if (result[langDestCode].match(clozeReg)) {
-
       newResults.push({
         recto: `${cleanText}<br><hr />${result[langSrcCode]}`,
         verso: `[sound:${mediaName}]`,
@@ -78,23 +73,15 @@ async function main() {
         recto: `${cleanText}<hr /><br>[sound:${mediaName}]<br>`,
         verso: result[langSrcCode],
         tags,
-
       })
     }
-
-
-
   }
 
   let newCsv = ''
 
   newCsv = newResults
-    .map(
-      (result) =>
-        `${result.recto};${result.verso};${result.tags}`
-    )
+    .map((result) => `${result.recto};${result.verso};${result.tags}`)
     .join('\n')
-
 
   console.log('New cards ===>', newResults.length)
 
